@@ -1,0 +1,35 @@
+ersion: '3.8'
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: postgres_ssl_prod
+    restart: unless-stopped
+    environment:
+      # Defina usuário, senha e DB inicial conforme necessidade
+      POSTGRES_USER: ${DBUSER}
+      POSTGRES_PASSWORD: ${DBPASSWD}
+      POSTGRES_DB: ${DBNAME}
+    volumes:
+      # Volume para persistir dados do banco
+      - ./db_data:/var/lib/postgresql/data
+
+      # Montar certificados (para rebuild podemos querer copiar manualmente,
+      # mas já copiamos no Dockerfile, então não precisamos aqui)
+      # - ./certs:/var/lib/postgresql/certs:ro
+
+      # Montar arquivo pg_hba.conf customizado
+      - ./pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+
+      # Montar postgresql.conf (caso queira sobrescrever via volume em vez do Dockerfile)
+      - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - '5432:5432'    # mapeia porta padrão do Postgres
+    networks:
+      - pg-network
+
+networks:
+  pg-network:
+    driver: bridge
